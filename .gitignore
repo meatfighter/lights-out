@@ -1,0 +1,17 @@
+# Node modules
+node_modules/
+
+# TypeScript compiled files
+*.tsbuildinfo
+dist/
+build/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Editor directories and files
+.idea
+*.swp
+*.swo

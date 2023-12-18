@@ -1,0 +1,11 @@
+{
+  "name": "lights-out",
+  "version": "1.0.0",
+  "scripts": {
+    "clean": "rm -rf ./dist/*",
+    "build": "tsc",
+    "start": "node ./dist/app/test.js"
+  },
+  "dependencies": {
+  }
+}
