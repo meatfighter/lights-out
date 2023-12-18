@@ -4,6 +4,16 @@ const DEFAULT_KERNEL = [
     [ false, true, false ],
 ];
 
+function printArray(array: boolean[][]) {
+    for (let i = 0; i < array.length; ++i) {
+        let str = '';
+        for (let j = 0; j < array[i].length; ++j) {
+            str += array[i][j] ? '1' : '0';
+        }
+        console.log(str);
+    }
+}
+
 function toArray(puzzle: string, rows: number, columns: number): boolean[][] {
     const array: boolean[][] = Array.from({ length: rows }, () => new Array(columns));
     let i = 0;
@@ -96,6 +106,14 @@ function solve(puzzle: boolean[][], kernel = DEFAULT_KERNEL, wrap = false) {
                 kernelCenterRow, kernelCenterCol, wrap);
         }
     }
+
+    for (let i = 0; i < matrix.length; ++i) {
+        let str = '';
+        for (let j = 0; j < matrix[i].length; ++j) {
+            str += matrix[i][j] ? '1' : '0';
+        }
+        console.log(str);
+    }
 }
 
 solve(toArray(`
@@ -105,3 +123,24 @@ solve(toArray(`
 00101
 01010
 `, 5, 5));
+
+// const puzzle = toArray(`
+// 00000
+// 00000
+// 00000
+// 00000
+// 00000
+// `, 5, 5);
+// applyKernel(puzzle, 5, 5, 1, 1);
+// const matrixRow: boolean[] = new Array(25);
+// for (let i = 0, k = 0; i < 5; ++i) {
+//     for (let j = 0; j < 5; ++j, ++k) {
+//         matrixRow[k] = puzzle[i][j];
+//     }
+// }
+// applyKernel(puzzle, 5, 5, 1, 1);
+// let str = '';
+// for (let j = 0; j < matrixRow.length; ++j) {
+//     str += matrixRow[j] ? '1' : '0';
+// }
+// console.log(str);
