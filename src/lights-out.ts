@@ -33,28 +33,9 @@ function toArray(puzzle: string, rows: number, columns: number): boolean[][] {
     return array;
 }
 
-class Button {
-
-    readonly buttonRow: number;
-    readonly buttonCol: number;
-
-    constructor(buttonRow: number, buttonCol: number) {
-        this.buttonRow = buttonRow;
-        this.buttonCol = buttonCol;
-    }
-}
-
-function pushButton(buttonRow : number,
-                    buttonCol : number,
-                    puzzle: boolean[][],
-                    puzzleRows: number,
-                    puzzleCols: number,
-                    kernel = DEFAULT_KERNEL,
-                    kernelRows = DEFAULT_KERNEL.length,
-                    kernelCols = DEFAULT_KERNEL[0].length,
-                    kernelCenterRow = Math.floor(DEFAULT_KERNEL.length / 2),
-                    kernelCenterCol = Math.floor(DEFAULT_KERNEL[0].length / 2),
-                    wrap = false) {
+function pushButton(buttonRow : number, buttonCol : number, puzzle: boolean[][], puzzleRows: number, puzzleCols: number,
+                    kernel: boolean[][], kernelRows: number, kernelCols: number, kernelCenterRow: number,
+                    kernelCenterCol: number, wrap: boolean) {
 
     for (let ki = 0; ki < kernelRows; ++ki) {
         let i = buttonRow + ki - kernelCenterRow;
@@ -91,16 +72,12 @@ function pushButton(buttonRow : number,
     }
 }
 
-function createMatrix(puzzle: boolean[][], kernel = DEFAULT_KERNEL, wrap = false) {
-    const puzzleRows = puzzle.length;
-    const puzzleCols = puzzle[0].length;
-    const puzzleCells = puzzleRows * puzzleCols;
-    const matrix: boolean[][] = Array.from({ length: puzzleCells }, () => new Array(puzzleCells + 1));
+function createMatrix(puzzle: boolean[][], puzzleRows: number, puzzleCols: number, kernel: boolean[][],
+                      kernelRows: number, kernelCols: number, kernelCenterRow: number, kernelCenterCol: number,
+                      wrap: boolean) {
 
-    const kernelRows = kernel.length;
-    const kernelCols = kernel[0].length;
-    const kernelCenterRow = Math.floor(kernelRows / 2);
-    const kernelCenterCol = Math.floor(kernelCols / 2);
+    const buttons = puzzleRows * puzzleCols;
+    const matrix: boolean[][] = Array.from({ length: buttons }, () => new Array(buttons + 1));
 
     const tempPuzzle: boolean[][] = Array.from({ length: puzzleRows }, () => new Array(puzzleCols).fill(false));
     for (let buttonRow = 0, matrixRowIndex = 0; buttonRow < puzzleRows; ++buttonRow) {
@@ -136,14 +113,44 @@ function xorRow(matrix: boolean[][], source: number, target: number) {
     }
 }
 
-function solve(puzzle: boolean[][], kernel = DEFAULT_KERNEL, wrap = false): Button[] {
+function verifySolution(solution: boolean[][], puzzle: boolean[][], puzzleRows: number, puzzleCols: number,
+                        kernel: boolean[][], kernelRows: number, kernelCols: number, kernelCenterRow: number,
+                        kernelCenterCol: number, wrap: boolean) {
 
-    const matrix = createMatrix(puzzle, kernel, wrap);
+    const tempPuzzle = puzzle.map(row => row.slice());
+    for (let i = 0; i < puzzleRows; ++i) {
+        for (let j = 0; j < puzzleCols; ++j) {
+            if (solution[i][j]) {
+                pushButton(i, j, tempPuzzle, puzzleRows, puzzleCols, kernel, kernelRows, kernelCols, kernelCenterRow,
+                    kernelCenterCol, wrap);
+            }
+        }
+    }
+    for (let i = 0; i < puzzleRows; ++i) {
+        for (let j = 0; j < puzzleCols; ++j) {
+            if (tempPuzzle[i][j]) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+function solve(puzzle: boolean[][], kernel = DEFAULT_KERNEL, wrap = false): boolean[][] | null {
+
+    const puzzleRows = puzzle.length;
+    const puzzleCols = puzzle[0].length;
+
+    const kernelRows = kernel.length;
+    const kernelCols = kernel[0].length;
+    const kernelCenterRow = Math.floor(kernelRows / 2);
+    const kernelCenterCol = Math.floor(kernelCols / 2);
+
+    const matrix = createMatrix(puzzle, puzzleRows, puzzleCols, kernel, kernelRows, kernelCols, kernelCenterRow,
+        kernelCenterCol, wrap);
     const matrixRows = matrix.length;
-    const matrixCols = matrix[0].length;
-    const buttonCols = matrixCols - 1;
 
-    for (let j = 0; j < buttonCols; ++j) {
+    for (let j = 0; j < matrixRows; ++j) {
         outer: {
             for (let i = j; i < matrixRows; ++i) {
                 if (matrix[i][j]) {
@@ -163,34 +170,22 @@ function solve(puzzle: boolean[][], kernel = DEFAULT_KERNEL, wrap = false): Butt
         }
     }
 
-    
+    const solution: boolean[][] = Array.from({ length: puzzleRows }, () => new Array(puzzleCols).fill(false));
+    for (let i = 0, row = 0, col = 0; i < matrixRows; ++i) {
+        if (!matrix[i][i]) {
+            break;
+        }
+        solution[row][col] = matrix[i][matrixRows];
+        if (++col == puzzleCols) {
+            col = 0;
+            ++row;
+        }
+    }
+
+    if (!verifySolution(solution, puzzle, puzzleRows, puzzleCols, kernel, kernelRows, kernelCols, kernelCenterRow,
+        kernelCenterCol, wrap)) {
+        return null;
+    }
+
+    return solution;
 }
-
-solve(toArray(`
-00001
-01101
-10111
-10010
-01101
-`, 5, 5));
-
-// const puzzle = toArray(`
-// 00000
-// 00000
-// 00000
-// 00000
-// 00000
-// `, 5, 5);
-// applyKernel(puzzle, 5, 5, 1, 1);
-// const matrixRow: boolean[] = new Array(25);
-// for (let i = 0, k = 0; i < 5; ++i) {
-//     for (let j = 0; j < 5; ++j, ++k) {
-//         matrixRow[k] = puzzle[i][j];
-//     }
-// }
-// applyKernel(puzzle, 5, 5, 1, 1);
-// let str = '';
-// for (let j = 0; j < matrixRow.length; ++j) {
-//     str += matrixRow[j] ? '1' : '0';
-// }
-// console.log(str);
