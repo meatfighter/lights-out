@@ -1,6 +1,9 @@
+import { Kernel, Puzzle } from './lights-out.js';
 
+let purpleButtonImage: HTMLImageElement;
+let pinkButtonImage: HTMLImageElement;
+let plusImage: HTMLImageElement;
 
-// TODO TESTING
 async function loadImage(imageUrl: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
         const image = new Image();
@@ -16,8 +19,11 @@ async function loadImage(imageUrl: string): Promise<HTMLImageElement> {
 
 // TODO TESTING
 async function init() {
-    const image = await loadImage('button-pink.svg');
-    console.log(image);
+
+    pinkButtonImage = await loadImage('button-pink.svg');
+    purpleButtonImage = await loadImage('button-purple.svg');
+    plusImage = await loadImage('plus.svg');
+
     const canvas = document.getElementById('lights-out-canvas') as HTMLCanvasElement | null;
     if (canvas === null) {
         return; // TODO HANDLE ERROR
@@ -29,9 +35,19 @@ async function init() {
     ctx.fillStyle = window.getComputedStyle(document.body).backgroundColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    const puzzle = new Puzzle(new Kernel(), 5, 5);
+    puzzle.mix();
+    const solution = puzzle.solve();
+    if (solution == null) {
+        return; // WHAT?!
+    }
+
     for (let i = 0; i < 5; ++i) {
         for (let j = 0; j < 5; ++j) {
-            ctx.drawImage(image, 42 * i, 42 * j);
+            ctx.drawImage(puzzle.entries[i][j] ? pinkButtonImage : purpleButtonImage, 1 + 50 * i, 1 + 50 * j);
+            if (solution[i][j]) {
+                ctx.drawImage(plusImage, 13 + 50 * i, 13 + 50 * j);
+            }
         }
     }
 }

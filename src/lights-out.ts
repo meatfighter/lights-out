@@ -113,7 +113,7 @@ export class Kernel extends Matrix {
     readonly centerRow: number;
     readonly centerCol: number;
 
-    public constructor(wrap: boolean, entries: Kernel | boolean[][] | string | number = Kernel.DEFAULT_MATRIX,
+    public constructor(wrap: boolean = false, entries: Kernel | boolean[][] | string | number = Kernel.DEFAULT_MATRIX,
                        rows?: number, cols?: number) {
         super(entries, rows, cols);
         this.wrap = wrap;
@@ -234,5 +234,19 @@ export class Puzzle extends Matrix {
         }
 
         return solution;
+    }
+
+    mix() {
+        for (let i = this.rows - 1; i >= 0; --i) {
+            this.entries[i].fill(false);
+        }
+        for (let i = this.rows - 1; i >= 0; --i) {
+            for (let j = this.cols - 1; j >= 0; --j) {
+                if (Math.random() < 0.5) {
+                    this.pushButton(i, j);
+                }
+            }
+        }
+        return this;
     }
 }

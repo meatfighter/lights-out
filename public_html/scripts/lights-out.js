@@ -105,7 +105,7 @@ export class Kernel extends Matrix {
     wrap;
     centerRow;
     centerCol;
-    constructor(wrap, entries = Kernel.DEFAULT_MATRIX, rows, cols) {
+    constructor(wrap = false, entries = Kernel.DEFAULT_MATRIX, rows, cols) {
         super(entries, rows, cols);
         this.wrap = wrap;
         this.centerRow = Math.floor(this.rows / 2);
@@ -214,6 +214,19 @@ export class Puzzle extends Matrix {
             return null;
         }
         return solution;
+    }
+    mix() {
+        for (let i = this.rows - 1; i >= 0; --i) {
+            this.entries[i].fill(false);
+        }
+        for (let i = this.rows - 1; i >= 0; --i) {
+            for (let j = this.cols - 1; j >= 0; --j) {
+                if (Math.random() < 0.5) {
+                    this.pushButton(i, j);
+                }
+            }
+        }
+        return this;
     }
 }
 //# sourceMappingURL=lights-out.js.map

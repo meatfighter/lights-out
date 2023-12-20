@@ -2,9 +2,9 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="40"
-   height="40"
-   viewBox="0 0 10.583333 10.583334"
+   width="48"
+   height="48"
+   viewBox="0 0 12.7 12.700001"
    version="1.1"
    id="svg5"
    inkscape:version="1.1.2 (b8e25be833, 2022-02-05)"
@@ -30,7 +30,7 @@
      inkscape:cy="28"
      inkscape:window-width="1920"
      inkscape:window-height="1137"
-     inkscape:window-x="1912"
+     inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
      inkscape:current-layer="layer1"
@@ -62,21 +62,21 @@
        fy="123.06888"
        r="5.2916665"
        gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(0.90715729,-0.90715729,0.90032159,0.90032159,-99.707178,120.66961)" />
+       gradientTransform="matrix(1.0885978,-1.088598,1.080395,1.080395,-142.49178,121.24812)" />
   </defs>
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-114.20503,-117.77721)">
+     transform="translate(-114.20507,-117.77725)">
     <rect
-       style="fill:url(#radialGradient4742);fill-opacity:1;stroke:#b23350;stroke-width:0.265906;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:url(#radialGradient4742);fill-opacity:1;stroke:#b23350;stroke-width:0.319089;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect884"
-       width="10.317339"
-       height="10.317339"
-       x="114.33803"
-       y="117.91021"
-       rx="0.96725059"
-       ry="0.96725065" />
+       width="12.380911"
+       height="12.380911"
+       x="114.36462"
+       y="117.9368"
+       rx="1.1607105"
+       ry="1.1607106" />
   </g>
 </svg>
