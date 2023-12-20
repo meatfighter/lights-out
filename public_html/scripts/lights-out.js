@@ -1,114 +1,199 @@
 "use strict";
-const DEFAULT_KERNEL = [
-    [false, true, false],
-    [true, true, true],
-    [false, true, false],
-];
-// TODO REMOVE
-function printArray(array) {
-    for (let i = 0; i < array.length; ++i) {
+class Matrix {
+    entries;
+    rows;
+    cols;
+    constructor(entries, rows, cols) {
+        if (entries instanceof Matrix) {
+            this.entries = entries.entries.map(row => row.slice());
+            this.rows = entries.rows;
+            this.cols = entries.cols;
+        }
+        else if (typeof entries === 'string') {
+            if (rows === undefined) {
+                throw new TypeError('Rows not specified.');
+            }
+            if (cols == undefined) {
+                throw new TypeError('Cols not specified.');
+            }
+            this.entries = this.toBooleans(entries, rows, cols);
+            this.rows = rows;
+            this.cols = cols;
+        }
+        else {
+            this.entries = entries;
+            this.rows = rows !== undefined ? rows : entries.length;
+            this.cols = cols !== undefined ? cols : entries[0].length;
+        }
+    }
+    toBooleans(entries, rows, cols) {
+        const array = Array.from({ length: rows }, () => new Array(cols));
+        let i = 0;
+        let j = 0;
+        for (const entry of entries) {
+            if (/\s/.test(entry)) {
+                continue;
+            }
+            array[i][j] = entry !== '0';
+            if (++j === cols) {
+                j = 0;
+                ++i;
+            }
+        }
+        return array;
+    }
+    swapRows(i0, i1) {
+        const tempRow = this.entries[i0];
+        this.entries[i0] = this.entries[i1];
+        this.entries[i1] = tempRow;
+    }
+    xorRow(source, target) {
+        const sourceRow = this.entries[source];
+        const targetRow = this.entries[target];
+        for (let i = this.cols - 1; i >= 0; --i) {
+            targetRow[i] = targetRow[i] !== sourceRow[i];
+        }
+    }
+    reduce() {
+        for (let j = 0; j < this.rows; ++j) {
+            inner: {
+                for (let i = j; i < this.rows; ++i) {
+                    if (this.entries[i][j]) {
+                        this.swapRows(i, j);
+                        break inner;
+                    }
+                }
+                continue;
+            }
+            for (let i = 0; i < this.rows; ++i) {
+                if (i == j) {
+                    continue;
+                }
+                if (this.entries[i][j]) {
+                    this.xorRow(j, i);
+                }
+            }
+        }
+    }
+    toString() {
         let str = '';
-        for (let j = 0; j < array[i].length; ++j) {
-            str += array[i][j] ? '1' : '0';
+        for (let i = 0; i < this.rows; ++i) {
+            for (let j = 0; j < this.cols; ++j) {
+                str += this.entries[i][j] ? '1' : '0';
+            }
+            str += '\n';
         }
-        console.log(str);
+        return str;
     }
 }
-// TODO REMOVE
-function toArray(puzzle, rows, columns) {
-    const array = Array.from({ length: rows }, () => new Array(columns));
-    let i = 0;
-    let j = 0;
-    for (const c of puzzle) {
-        if (/\s/.test(c)) {
-            continue;
-        }
-        array[i][j] = c !== '0';
-        if (++j === columns) {
-            j = 0;
-            ++i;
-        }
+class Kernel extends Matrix {
+    static DEFAULT_MATRIX = [
+        [false, true, false],
+        [true, true, true],
+        [false, true, false],
+    ];
+    wrap;
+    centerRow;
+    centerCol;
+    constructor(wrap, entries = Kernel.DEFAULT_MATRIX, rows, cols) {
+        super(entries, rows, cols);
+        this.wrap = wrap;
+        this.centerRow = Math.floor(this.rows / 2);
+        this.centerCol = Math.floor(this.cols / 2);
     }
-    return array;
 }
-function pushButton(buttonRow, buttonCol, puzzle, puzzleRows, puzzleCols, kernel, kernelRows, kernelCols, kernelCenterRow, kernelCenterCol, wrap) {
-    for (let ki = 0; ki < kernelRows; ++ki) {
-        let i = buttonRow + ki - kernelCenterRow;
-        if (i < 0) {
-            if (wrap) {
-                i += puzzleRows;
-            }
-            else {
-                continue;
-            }
-        }
-        else if (i >= puzzleRows) {
-            if (wrap) {
-                i -= puzzleRows;
-            }
-            else {
-                continue;
-            }
-        }
-        for (let kj = 0; kj < kernelCols; ++kj) {
-            let j = buttonCol + kj - kernelCenterCol;
-            if (j < 0) {
-                if (wrap) {
-                    j += puzzleCols;
+class Puzzle extends Matrix {
+    kernel;
+    constructor(kernel, entries, rows, cols) {
+        super(entries, rows, cols);
+        this.kernel = kernel;
+    }
+    pushButton(row, col) {
+        const rowOffset = row - this.kernel.centerRow;
+        const colOffset = col - this.kernel.centerCol;
+        for (let ki = this.kernel.rows - 1; ki >= 0; --ki) {
+            let i = rowOffset + ki;
+            if (i < 0) {
+                if (this.kernel.wrap) {
+                    i += this.rows;
                 }
                 else {
                     continue;
                 }
             }
-            else if (j >= puzzleCols) {
-                if (wrap) {
-                    j -= puzzleCols;
+            else if (i >= this.rows) {
+                if (this.kernel.wrap) {
+                    i -= this.rows;
                 }
                 else {
                     continue;
                 }
             }
-            puzzle[i][j] = puzzle[i][j] !== kernel[ki][kj];
+            for (let kj = this.kernel.cols - 1; kj >= 0; --kj) {
+                let j = colOffset + kj;
+                if (j < 0) {
+                    if (this.kernel.wrap) {
+                        j += this.cols;
+                    }
+                    else {
+                        continue;
+                    }
+                }
+                else if (j >= this.cols) {
+                    if (this.kernel.wrap) {
+                        j -= this.cols;
+                    }
+                    else {
+                        continue;
+                    }
+                }
+                this.entries[i][j] = this.entries[i][j] !== this.kernel.entries[ki][kj];
+            }
         }
     }
 }
-function createMatrix(puzzle, puzzleRows, puzzleCols, kernel, kernelRows, kernelCols, kernelCenterRow, kernelCenterCol, wrap) {
+/*
+
+
+function createMatrix(puzzle: boolean[][], puzzleRows: number, puzzleCols: number, kernel: boolean[][],
+                      kernelRows: number, kernelCols: number, kernelCenterRow: number, kernelCenterCol: number,
+                      wrap: boolean) {
+
     const buttons = puzzleRows * puzzleCols;
-    const matrix = Array.from({ length: buttons }, () => new Array(buttons + 1));
-    const tempPuzzle = Array.from({ length: puzzleRows }, () => new Array(puzzleCols).fill(false));
+    const matrix: boolean[][] = Array.from({ length: buttons }, () => new Array(buttons + 1));
+
+    const tempPuzzle: boolean[][] = Array.from({ length: puzzleRows }, () => new Array(puzzleCols).fill(false));
     for (let buttonRow = 0, matrixRowIndex = 0; buttonRow < puzzleRows; ++buttonRow) {
         for (let buttonCol = 0; buttonCol < puzzleCols; ++buttonCol, ++matrixRowIndex) {
             const matrixRow = matrix[matrixRowIndex];
             matrixRow[matrixRow.length - 1] = puzzle[buttonRow][buttonCol];
-            pushButton(buttonRow, buttonCol, tempPuzzle, puzzleRows, puzzleCols, kernel, kernelRows, kernelCols, kernelCenterRow, kernelCenterCol, wrap);
+            pushButton(buttonRow, buttonCol, tempPuzzle, puzzleRows, puzzleCols, kernel, kernelRows, kernelCols,
+                kernelCenterRow, kernelCenterCol, wrap);
             for (let i = 0, k = 0; i < puzzleRows; ++i) {
                 for (let j = 0; j < puzzleCols; ++j, ++k) {
                     matrixRow[k] = tempPuzzle[i][j];
                 }
             }
-            pushButton(buttonRow, buttonCol, tempPuzzle, puzzleRows, puzzleCols, kernel, kernelRows, kernelCols, kernelCenterRow, kernelCenterCol, wrap);
+            pushButton(buttonRow, buttonCol, tempPuzzle, puzzleRows, puzzleCols, kernel, kernelRows, kernelCols,
+                kernelCenterRow, kernelCenterCol, wrap);
         }
     }
+
     return matrix;
 }
-function swapRows(matrix, i0, i1) {
-    const tempRow = matrix[i0];
-    matrix[i0] = matrix[i1];
-    matrix[i1] = tempRow;
-}
-function xorRow(matrix, source, target) {
-    const sourceRow = matrix[source];
-    const targetRow = matrix[target];
-    for (let i = sourceRow.length - 1; i >= 0; --i) {
-        targetRow[i] = targetRow[i] !== sourceRow[i];
-    }
-}
-function verifySolution(solution, puzzle, puzzleRows, puzzleCols, kernel, kernelRows, kernelCols, kernelCenterRow, kernelCenterCol, wrap) {
+
+
+
+function verifySolution(solution: boolean[][], puzzle: boolean[][], puzzleRows: number, puzzleCols: number,
+                        kernel: boolean[][], kernelRows: number, kernelCols: number, kernelCenterRow: number,
+                        kernelCenterCol: number, wrap: boolean) {
+
     const tempPuzzle = puzzle.map(row => row.slice());
     for (let i = 0; i < puzzleRows; ++i) {
         for (let j = 0; j < puzzleCols; ++j) {
             if (solution[i][j]) {
-                pushButton(i, j, tempPuzzle, puzzleRows, puzzleCols, kernel, kernelRows, kernelCols, kernelCenterRow, kernelCenterCol, wrap);
+                pushButton(i, j, tempPuzzle, puzzleRows, puzzleCols, kernel, kernelRows, kernelCols, kernelCenterRow,
+                    kernelCenterCol, wrap);
             }
         }
     }
@@ -121,15 +206,21 @@ function verifySolution(solution, puzzle, puzzleRows, puzzleCols, kernel, kernel
     }
     return true;
 }
-function solve(puzzle, kernel = DEFAULT_KERNEL, wrap = false) {
+
+function solve(puzzle: boolean[][], kernel = DEFAULT_KERNEL, wrap = false): boolean[][] | null {
+
     const puzzleRows = puzzle.length;
     const puzzleCols = puzzle[0].length;
+
     const kernelRows = kernel.length;
     const kernelCols = kernel[0].length;
     const kernelCenterRow = Math.floor(kernelRows / 2);
     const kernelCenterCol = Math.floor(kernelCols / 2);
-    const matrix = createMatrix(puzzle, puzzleRows, puzzleCols, kernel, kernelRows, kernelCols, kernelCenterRow, kernelCenterCol, wrap);
+
+    const matrix = createMatrix(puzzle, puzzleRows, puzzleCols, kernel, kernelRows, kernelCols, kernelCenterRow,
+        kernelCenterCol, wrap);
     const matrixRows = matrix.length;
+
     for (let j = 0; j < matrixRows; ++j) {
         outer: {
             for (let i = j; i < matrixRows; ++i) {
@@ -149,7 +240,8 @@ function solve(puzzle, kernel = DEFAULT_KERNEL, wrap = false) {
             }
         }
     }
-    const solution = Array.from({ length: puzzleRows }, () => new Array(puzzleCols).fill(false));
+
+    const solution: boolean[][] = Array.from({ length: puzzleRows }, () => new Array(puzzleCols).fill(false));
     for (let i = 0, row = 0, col = 0; i < matrixRows; ++i) {
         if (!matrix[i][i]) {
             break;
@@ -160,43 +252,12 @@ function solve(puzzle, kernel = DEFAULT_KERNEL, wrap = false) {
             ++row;
         }
     }
-    if (!verifySolution(solution, puzzle, puzzleRows, puzzleCols, kernel, kernelRows, kernelCols, kernelCenterRow, kernelCenterCol, wrap)) {
+
+    if (!verifySolution(solution, puzzle, puzzleRows, puzzleCols, kernel, kernelRows, kernelCols, kernelCenterRow,
+        kernelCenterCol, wrap)) {
         return null;
     }
+
     return solution;
-}
-// TODO TESTING
-async function loadImage(imageUrl) {
-    return new Promise((resolve, reject) => {
-        const image = new Image();
-        image.onload = () => resolve(image);
-        image.onerror = e => reject(new Error('Failed to load image.'));
-        image.src = imageUrl;
-        // fetch(imageUrl)
-        //     .then(response => response.blob())
-        //     .then(blob => image.src = URL.createObjectURL(blob))
-        //     .catch(e => reject(e));
-    });
-}
-// TODO TESTING
-async function init() {
-    const image = await loadImage('button-pink.svg');
-    console.log(image);
-    const canvas = document.getElementById('lights-out-canvas');
-    if (canvas === null) {
-        return; // TODO HANDLE ERROR
-    }
-    const ctx = canvas.getContext('2d');
-    if (ctx === null) {
-        return; // TODO HANDLE ERROR
-    }
-    ctx.fillStyle = window.getComputedStyle(document.body).backgroundColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    for (let i = 0; i < 5; ++i) {
-        for (let j = 0; j < 5; ++j) {
-            ctx.drawImage(image, 42 * i, 42 * j);
-        }
-    }
-}
-document.addEventListener('DOMContentLoaded', init);
+}*/ 
 //# sourceMappingURL=lights-out.js.map
