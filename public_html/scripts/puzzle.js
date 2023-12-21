@@ -229,4 +229,4 @@ export class Puzzle extends Matrix {
         return this;
     }
 }
-//# sourceMappingURL=lights-out.js.map
+//# sourceMappingURL=puzzle.js.map

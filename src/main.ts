@@ -1,9 +1,24 @@
-import { Kernel, Puzzle } from './lights-out.js';
+import { Kernel, Puzzle } from './puzzle.js';
 
 const BUTTON_SIZE = 50;
+const INITIAL_PUZZLE_SIZE = 5;
+const SHAKE_MILLIS = 500;
+
+enum State {
+    PLAYING,
+    EDITING,
+    CONFIGURING
+}
+
+interface ButtonCoordinates {
+    row: number;
+    col: number;
+}
+
+let state = State.PLAYING;
 
 let kernel = new Kernel();
-let puzzle = new Puzzle(kernel, 10, 10).mix();
+let puzzle = new Puzzle(kernel, INITIAL_PUZZLE_SIZE, INITIAL_PUZZLE_SIZE).mix();
 
 let purpleButtonImages: HTMLImageElement[] = new Array(2);
 let pinkButtonImages: HTMLImageElement[] = new Array(2);
@@ -12,51 +27,136 @@ let plusImages: HTMLImageElement[] = new Array(2);
 let hoverRow = -1;
 let hoverCol = -1;
 
-function addLightsOutCanvasListeners() {
-    const canvas = document.getElementById('lights-out-canvas') as HTMLCanvasElement | null;
+let solution: boolean[][] | null = null;
+
+let shaking = false;
+
+function shakeSolveButton() {
+    const button = document.getElementById('solveButton') as HTMLButtonElement | null;
+    if (button === null || shaking) {
+        return;
+    }
+    shaking = true;
+    let shakingStartTime = -1;
+    const shake = (timeStamp: number) => {
+        if (!shaking) {
+            return;
+        }
+        if (shakingStartTime < 0) {
+            shakingStartTime = timeStamp;
+        }
+        const duration = timeStamp - shakingStartTime;
+        if (duration > SHAKE_MILLIS) {
+            stopShakingSolveButton();
+            return;
+        }
+        button.style.transform = `translateX(${5 * Math.sin(15 * Math.PI * duration / SHAKE_MILLIS)}px)`;
+        requestAnimationFrame(shake);
+    };
+    requestAnimationFrame(shake);
+}
+
+function stopShakingSolveButton() {
+    shaking = false;
+    const button = document.getElementById('solveButton') as HTMLButtonElement | null;
+    if (button === null) {
+        return;
+    }
+    button.style.transform = '';
+}
+
+function initPuzzleOperations() {
+    (document.getElementById('mixButton') as HTMLButtonElement | null)?.addEventListener('click',
+            _ => mixButtonPressed());
+    (document.getElementById('solveButton') as HTMLButtonElement | null)?.addEventListener('click',
+        _ => solveButtonPressed());
+    (document.getElementById('editButton') as HTMLButtonElement | null)?.addEventListener('click',
+        _ => editButtonPressed());
+    (document.getElementById('ConfigButton') as HTMLButtonElement | null)?.addEventListener('click',
+        _ => configButtonPressed());
+}
+
+function mixButtonPressed() {
+    solution = null;
+    stopShakingSolveButton();
+    puzzle.mix();
+    renderPuzzle();
+}
+
+function solveButtonPressed() {
+    solution = puzzle.solve();
+    if (solution === null) {
+        shakeSolveButton();
+    } else {
+        renderPuzzle();
+    }
+}
+
+function editButtonPressed() {
+    stopShakingSolveButton();
+    solution = null;
+    renderPuzzle();
+}
+
+function configButtonPressed() {
+    stopShakingSolveButton();
+    solution = null;
+}
+
+function toButtonCoordinates(canvas: HTMLCanvasElement, e: MouseEvent): ButtonCoordinates {
+    const rect = canvas.getBoundingClientRect();
+    return {
+        row: Math.floor((e.clientY - rect.top) * canvas.height / (BUTTON_SIZE * rect.height)),
+        col: Math.floor((e.clientX - rect.left) * canvas.width / (BUTTON_SIZE * rect.width))
+    };
+}
+
+function initPuzzleCanvas() {
+    const canvas = document.getElementById('puzzle-canvas') as HTMLCanvasElement | null;
     if (canvas === null) {
         return; // TODO HANDLE ERROR
     }
-    canvas.addEventListener('click', e => {
-        const rect = canvas.getBoundingClientRect();
-        handleLightsOutCanvasClick(
-            (e.clientX - rect.left) * canvas.width / rect.width,
-            (e.clientY - rect.top) * canvas.height / rect.height);
-    });
-    canvas.addEventListener('mouseenter', e => {
-        const rect = canvas.getBoundingClientRect();
-        handleLightsOutCanvasMove(
-            (e.clientX - rect.left) * canvas.width / rect.width,
-            (e.clientY - rect.top) * canvas.height / rect.height);
-    });
-    canvas.addEventListener('mousemove', e => {
-        const rect = canvas.getBoundingClientRect();
-        handleLightsOutCanvasMove(
-            (e.clientX - rect.left) * canvas.width / rect.width,
-            (e.clientY - rect.top) * canvas.height / rect.height);
-    });
-    canvas.addEventListener('mouseleave', e => handleLightsOutCanvasExit());
+    canvas.height = BUTTON_SIZE * puzzle.rows;
+    canvas.width = BUTTON_SIZE * puzzle.cols;
+    canvas.addEventListener('click', e => puzzleCanvasClicked(toButtonCoordinates(canvas, e)));
+    canvas.addEventListener('blur', _ => puzzleCanvasExited());
+    canvas.addEventListener('mouseenter', e => puzzleCanvasHovered(toButtonCoordinates(canvas, e)));
+    canvas.addEventListener('mousemove', e => puzzleCanvasHovered(toButtonCoordinates(canvas, e)));
+    canvas.addEventListener('mouseleave', _ => puzzleCanvasExited());
 }
 
-function handleLightsOutCanvasClick(x: number, y: number) {
-    puzzle.pushButton(Math.floor(y / BUTTON_SIZE), Math.floor(x / BUTTON_SIZE));
+function puzzleCanvasClicked(b: ButtonCoordinates) {
+    puzzle.pushButton(b.row, b.col);
+    if (solution !== null) {
+        solution[b.row][b.col] = !solution[b.row][b.col];
+        outer: {
+            for (let i = puzzle.rows - 1; i >= 0; --i) {
+                for (let j = puzzle.cols - 1; j >= 0; --j) {
+                    if (solution[i][j]) {
+                        break outer;
+                    }
+                }
+            }
+            solution = null;
+        }
+    }
     renderPuzzle();
 }
 
-function handleLightsOutCanvasMove(x: number, y: number) {
-    hoverRow = Math.floor(y / BUTTON_SIZE);
-    hoverCol = Math.floor(x / BUTTON_SIZE);
+function puzzleCanvasHovered(b: ButtonCoordinates) {
+    hoverRow = b.row;
+    hoverCol = b.col;
     renderPuzzle();
 }
 
-function handleLightsOutCanvasExit() {
+function puzzleCanvasExited() {
     hoverRow = -1;
     hoverCol = -1;
     renderPuzzle();
 }
 
 function renderPuzzle() {
-    const canvas = document.getElementById('lights-out-canvas') as HTMLCanvasElement | null;
+    const canvas = document.getElementById('puzzle-canvas') as HTMLCanvasElement | null;
     if (canvas === null) {
         return; // TODO HANDLE ERROR
     }
@@ -72,6 +172,10 @@ function renderPuzzle() {
             const hover = (i == hoverRow && j == hoverCol) ? 1 : 0;
             ctx.drawImage(puzzle.entries[i][j] ? pinkButtonImages[hover] : purpleButtonImages[hover],
                 1 + BUTTON_SIZE * j, 1 + BUTTON_SIZE * i);
+            if (solution === null || !solution[i][j]) {
+                continue;
+            }
+            ctx.drawImage(plusImages[hover], 13 + BUTTON_SIZE * j, 13 + BUTTON_SIZE * i);
         }
     }
 }
@@ -80,7 +184,7 @@ async function loadImage(imageUrl: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
         const image = new Image();
         image.onload = () => resolve(image);
-        image.onerror = e => reject(new Error('Failed to load image.'));
+        image.onerror = _ => reject(new Error('Failed to load image.'));
         image.src = imageUrl;
         // fetch(imageUrl)
         //     .then(response => response.blob())
@@ -99,7 +203,8 @@ async function init() {
     plusImages[0] = await loadImage('plus.svg');
     plusImages[1] = await loadImage('dark-plus.svg');
 
-    addLightsOutCanvasListeners();
+    initPuzzleCanvas();
+    initPuzzleOperations();
     renderPuzzle();
 }
 
