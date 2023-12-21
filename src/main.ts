@@ -1,8 +1,80 @@
 import { Kernel, Puzzle } from './lights-out.js';
 
-let purpleButtonImage: HTMLImageElement;
-let pinkButtonImage: HTMLImageElement;
-let plusImage: HTMLImageElement;
+const BUTTON_SIZE = 50;
+
+let kernel = new Kernel();
+let puzzle = new Puzzle(kernel, 10, 10).mix();
+
+let purpleButtonImages: HTMLImageElement[] = new Array(2);
+let pinkButtonImages: HTMLImageElement[] = new Array(2);
+let plusImages: HTMLImageElement[] = new Array(2);
+
+let hoverRow = -1;
+let hoverCol = -1;
+
+function addLightsOutCanvasListeners() {
+    const canvas = document.getElementById('lights-out-canvas') as HTMLCanvasElement | null;
+    if (canvas === null) {
+        return; // TODO HANDLE ERROR
+    }
+    canvas.addEventListener('click', e => {
+        const rect = canvas.getBoundingClientRect();
+        handleLightsOutCanvasClick(
+            (e.clientX - rect.left) * canvas.width / rect.width,
+            (e.clientY - rect.top) * canvas.height / rect.height);
+    });
+    canvas.addEventListener('mouseenter', e => {
+        const rect = canvas.getBoundingClientRect();
+        handleLightsOutCanvasMove(
+            (e.clientX - rect.left) * canvas.width / rect.width,
+            (e.clientY - rect.top) * canvas.height / rect.height);
+    });
+    canvas.addEventListener('mousemove', e => {
+        const rect = canvas.getBoundingClientRect();
+        handleLightsOutCanvasMove(
+            (e.clientX - rect.left) * canvas.width / rect.width,
+            (e.clientY - rect.top) * canvas.height / rect.height);
+    });
+    canvas.addEventListener('mouseleave', e => handleLightsOutCanvasExit());
+}
+
+function handleLightsOutCanvasClick(x: number, y: number) {
+    puzzle.pushButton(Math.floor(y / BUTTON_SIZE), Math.floor(x / BUTTON_SIZE));
+    renderPuzzle();
+}
+
+function handleLightsOutCanvasMove(x: number, y: number) {
+    hoverRow = Math.floor(y / BUTTON_SIZE);
+    hoverCol = Math.floor(x / BUTTON_SIZE);
+    renderPuzzle();
+}
+
+function handleLightsOutCanvasExit() {
+    hoverRow = -1;
+    hoverCol = -1;
+    renderPuzzle();
+}
+
+function renderPuzzle() {
+    const canvas = document.getElementById('lights-out-canvas') as HTMLCanvasElement | null;
+    if (canvas === null) {
+        return; // TODO HANDLE ERROR
+    }
+    const ctx = canvas.getContext('2d');
+    if (ctx === null) {
+        return; // TODO HANDLE ERROR
+    }
+    ctx.fillStyle = window.getComputedStyle(document.body).backgroundColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = puzzle.rows - 1; i >= 0; --i) {
+        for (let j = puzzle.cols - 1; j >= 0; --j) {
+            const hover = (i == hoverRow && j == hoverCol) ? 1 : 0;
+            ctx.drawImage(puzzle.entries[i][j] ? pinkButtonImages[hover] : purpleButtonImages[hover],
+                1 + BUTTON_SIZE * j, 1 + BUTTON_SIZE * i);
+        }
+    }
+}
 
 async function loadImage(imageUrl: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
@@ -20,36 +92,15 @@ async function loadImage(imageUrl: string): Promise<HTMLImageElement> {
 // TODO TESTING
 async function init() {
 
-    pinkButtonImage = await loadImage('button-pink.svg');
-    purpleButtonImage = await loadImage('button-purple.svg');
-    plusImage = await loadImage('plus.svg');
+    pinkButtonImages[0] = await loadImage('button-pink.svg');
+    pinkButtonImages[1] = await loadImage('button-dark-pink.svg');
+    purpleButtonImages[0] = await loadImage('button-purple.svg');
+    purpleButtonImages[1] = await loadImage('button-dark-purple.svg');
+    plusImages[0] = await loadImage('plus.svg');
+    plusImages[1] = await loadImage('dark-plus.svg');
 
-    const canvas = document.getElementById('lights-out-canvas') as HTMLCanvasElement | null;
-    if (canvas === null) {
-        return; // TODO HANDLE ERROR
-    }
-    const ctx = canvas.getContext('2d');
-    if (ctx === null) {
-        return; // TODO HANDLE ERROR
-    }
-    ctx.fillStyle = window.getComputedStyle(document.body).backgroundColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const puzzle = new Puzzle(new Kernel(), 5, 5);
-    puzzle.mix();
-    const solution = puzzle.solve();
-    if (solution == null) {
-        return; // WHAT?!
-    }
-
-    for (let i = 0; i < 5; ++i) {
-        for (let j = 0; j < 5; ++j) {
-            ctx.drawImage(puzzle.entries[i][j] ? pinkButtonImage : purpleButtonImage, 1 + 50 * i, 1 + 50 * j);
-            if (solution[i][j]) {
-                ctx.drawImage(plusImage, 13 + 50 * i, 13 + 50 * j);
-            }
-        }
-    }
+    addLightsOutCanvasListeners();
+    renderPuzzle();
 }
 
 document.addEventListener('DOMContentLoaded', init);

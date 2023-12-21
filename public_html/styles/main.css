@@ -1,0 +1,97 @@
+@media only screen and (max-device-width: 400px) {
+    html {
+        -webkit-text-size-adjust: none;
+        text-size-adjust: none;
+    }
+}
+
+body {
+    background-color: #C9D6DE;
+    color: #FFFFFF;
+    margin: 0;
+    padding: 0;
+    font-family: 'Open Sans', sans-serif;
+    overflow: hidden;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.row-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.column-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#main-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    max-height: 100vh;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+.main-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 5px;
+}
+
+.centered-canvas {
+    display: flex;
+    justify-content: center;
+}
+
+.button-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding-top: 25px;
+}
+
+.button {
+    background-color: #517FFF;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    border-radius: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.1s ease-in-out;
+}
+
+.button:hover {
+    background-color: #4775E0;
+}
+
+.button:active {
+    transform: translateY(2px);
+    box-shadow: none;
+}
+
+.button:focus {
+    background-color: #4775E0;
+    outline: none;
+}
+
+.button:disabled {
+    background-color: #7f7f7f;
+    cursor: not-allowed;
+}
+
+button:disabled.button:active {
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}

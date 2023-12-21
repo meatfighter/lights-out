@@ -4,11 +4,11 @@
 <head>
 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="date" content="2023-12-20">
+    <meta name="date" content="2023-12-21">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#C9D6DE">
 
-    <link rel="stylesheet" href="styles/index.css?v=2023-12-20" type="text/css">
+    <link rel="stylesheet" href="styles/main.css?v=2023-12-21" type="text/css">
     <link rel="manifest" href="manifest.json">
     <link rel="mask-icon" href="mask-icon.svg" color="#000000">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -26,10 +26,26 @@
 <body>
 
 <main id="main-content">
-    <canvas id="lights-out-canvas" class="lights-out-canvas" width="250" height="250"></canvas>
+
+
+    <div id="main-container" class="main-container">
+
+        <div class="centered-canvas">
+            <canvas id="lights-out-canvas" width="500" height="500"></canvas>
+        </div>
+
+        <div class="button-row" id="button-row">
+            <button class="button" id="mixButton">Mix</button>
+            <button class="button" id="solveButton">Solve</button>
+            <button class="button" id="editButton">Edit</button>
+            <button class="button" id="configButton">Config</button>
+        </div>
+
+    </div>
+
 </main>
 
-<script type="module" src="scripts/main.js?v=2023-12-20"></script>
+<script type="module" src="scripts/main.js?v=2023-12-21"></script>
 </body>
 
 </html>
