@@ -9,16 +9,17 @@ var State;
     State[State["CONFIGURING"] = 2] = "CONFIGURING";
 })(State || (State = {}));
 const panels = {
+    puzzle: 'puzzle-panel',
     puzzleOps: 'puzzle-ops-panel',
-    puzzleEdit: 'puzzle-edit-panel'
+    puzzleEdit: 'puzzle-edit-panel',
+    config: 'config-panel'
 };
+const purpleButtonImages = new Array(2);
+const pinkButtonImages = new Array(2);
+const plusImages = new Array(2);
 let kernel = new Kernel();
 let puzzle = new Puzzle(kernel, INITIAL_PUZZLE_SIZE, INITIAL_PUZZLE_SIZE).mix();
-let purpleButtonImages = new Array(2);
-let pinkButtonImages = new Array(2);
-let plusImages = new Array(2);
-let hoverRow = -1;
-let hoverCol = -1;
+let hover = null;
 let solution = null;
 let shaking = false;
 let state = State.PLAYING;
@@ -52,6 +53,8 @@ function stopShakingSolveButton() {
 }
 function showEdit() {
     state = State.EDITING;
+    hover = null;
+    solution = null;
     const puzzleOpsDiv = document.getElementById('puzzle-ops');
     puzzleOpsDiv.innerHTML = panels.puzzleEdit;
     document.getElementById('fillButton').addEventListener('click', _ => fillPressed());
@@ -59,18 +62,64 @@ function showEdit() {
     document.getElementById('doneButton').addEventListener('click', _ => editDonePressed());
 }
 function fillPressed() {
-    // TODO puzzle.fill(); in Matrix
+    puzzle.fill(true);
+    renderPuzzle();
 }
 function clearPressed() {
-    // TODO puzzle.clear(); in Matrix
+    puzzle.fill(false);
+    renderPuzzle();
 }
 function editDonePressed() {
     showPuzzleOperations();
 }
+function showConfig() {
+    state = State.CONFIGURING;
+    hover = null;
+    solution = null;
+    document.getElementById('main-container').innerHTML = panels.config;
+    document.getElementById('resetButton').addEventListener('click', _ => resetPressed());
+    document.getElementById('doneButton').addEventListener('click', _ => configDonePressed());
+    const canvas = document.getElementById('kernel-canvas');
+    canvas.height = BUTTON_SIZE * kernel.rows;
+    canvas.width = BUTTON_SIZE * kernel.cols;
+    canvas.addEventListener('click', e => kernelCanvasClicked(toButtonCoordinates(canvas, e)));
+    canvas.addEventListener('blur', _ => kernelCanvasExited());
+    canvas.addEventListener('mouseenter', e => kernelCanvasHovered(toButtonCoordinates(canvas, e)));
+    canvas.addEventListener('mousemove', e => kernelCanvasHovered(toButtonCoordinates(canvas, e)));
+    canvas.addEventListener('mouseleave', _ => kernelCanvasExited());
+    renderKernel();
+}
+function resetPressed() {
+    kernel = new Kernel();
+    renderKernel();
+}
+function configDonePressed() {
+    puzzle = new Puzzle(kernel, INITIAL_PUZZLE_SIZE, INITIAL_PUZZLE_SIZE).mix();
+    showPuzzle();
+}
+function kernelCanvasClicked(b) {
+    kernel.entries[b.row][b.col] = !kernel.entries[b.row][b.col];
+    renderKernel();
+}
+function kernelCanvasHovered(b) {
+    hover = b;
+    renderKernel();
+}
+function kernelCanvasExited() {
+    hover = null;
+    renderKernel();
+}
+function showPuzzle() {
+    solution = null;
+    document.getElementById('main-container').innerHTML = panels.puzzle;
+    showPuzzleOperations();
+    initPuzzleCanvas();
+    renderPuzzle();
+}
 function showPuzzleOperations() {
     state = State.PLAYING;
-    const puzzleOpsDiv = document.getElementById('puzzle-ops');
-    puzzleOpsDiv.innerHTML = panels.puzzleOps;
+    hover = null;
+    document.getElementById('puzzle-ops').innerHTML = panels.puzzleOps;
     document.getElementById('mixButton').addEventListener('click', _ => mixPressed());
     document.getElementById('solveButton').addEventListener('click', _ => solvePressed());
     document.getElementById('editButton').addEventListener('click', _ => editPressed());
@@ -88,8 +137,9 @@ function solvePressed() {
         shakeSolveButton();
     }
     else {
-        renderPuzzle();
+        provisionallyClearSolution();
     }
+    renderPuzzle();
 }
 function editPressed() {
     stopShakingSolveButton();
@@ -100,6 +150,7 @@ function editPressed() {
 function configPressed() {
     stopShakingSolveButton();
     solution = null;
+    showConfig();
 }
 function toButtonCoordinates(canvas, e) {
     const rect = canvas.getBoundingClientRect();
@@ -118,6 +169,21 @@ function initPuzzleCanvas() {
     canvas.addEventListener('mousemove', e => puzzleCanvasHovered(toButtonCoordinates(canvas, e)));
     canvas.addEventListener('mouseleave', _ => puzzleCanvasExited());
 }
+function provisionallyClearSolution() {
+    if (solution === null) {
+        return;
+    }
+    outer: {
+        for (let i = puzzle.rows - 1; i >= 0; --i) {
+            for (let j = puzzle.cols - 1; j >= 0; --j) {
+                if (solution[i][j]) {
+                    break outer;
+                }
+            }
+        }
+        solution = null;
+    }
+}
 function puzzleCanvasClicked(b) {
     if (state == State.PLAYING) {
         puzzle.pushButton(b.row, b.col);
@@ -127,45 +193,37 @@ function puzzleCanvasClicked(b) {
     }
     if (solution !== null) {
         solution[b.row][b.col] = !solution[b.row][b.col];
-        outer: {
-            for (let i = puzzle.rows - 1; i >= 0; --i) {
-                for (let j = puzzle.cols - 1; j >= 0; --j) {
-                    if (solution[i][j]) {
-                        break outer;
-                    }
-                }
-            }
-            solution = null;
-        }
+        provisionallyClearSolution();
     }
     renderPuzzle();
 }
 function puzzleCanvasHovered(b) {
-    hoverRow = b.row;
-    hoverCol = b.col;
+    hover = b;
     renderPuzzle();
 }
 function puzzleCanvasExited() {
-    hoverRow = -1;
-    hoverCol = -1;
+    hover = null;
     renderPuzzle();
 }
 function renderPuzzle() {
-    const canvas = document.getElementById('puzzle-canvas');
+    render('puzzle-canvas', puzzle);
+}
+function renderKernel() {
+    render('kernel-canvas', kernel);
+}
+function render(canvasId, matrix) {
+    const canvas = document.getElementById(canvasId);
     const ctx = canvas.getContext('2d');
-    if (ctx === null) {
-        return; // TODO HANDLE ERROR
-    }
     ctx.fillStyle = window.getComputedStyle(document.body).backgroundColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    for (let i = puzzle.rows - 1; i >= 0; --i) {
-        for (let j = puzzle.cols - 1; j >= 0; --j) {
-            const hover = (i == hoverRow && j == hoverCol) ? 1 : 0;
-            ctx.drawImage(puzzle.entries[i][j] ? pinkButtonImages[hover] : purpleButtonImages[hover], 1 + BUTTON_SIZE * j, 1 + BUTTON_SIZE * i);
+    for (let i = matrix.rows - 1; i >= 0; --i) {
+        for (let j = matrix.cols - 1; j >= 0; --j) {
+            const h = (hover && i == hover.row && j == hover.col) ? 1 : 0;
+            ctx.drawImage(matrix.entries[i][j] ? pinkButtonImages[h] : purpleButtonImages[h], 1 + BUTTON_SIZE * j, 1 + BUTTON_SIZE * i);
             if (solution === null || !solution[i][j]) {
                 continue;
             }
-            ctx.drawImage(plusImages[hover], 13 + BUTTON_SIZE * j, 13 + BUTTON_SIZE * i);
+            ctx.drawImage(plusImages[h], 13 + BUTTON_SIZE * j, 13 + BUTTON_SIZE * i);
         }
     }
 }
@@ -192,16 +250,13 @@ async function loadImage(imageUrl) {
 // TODO TESTING
 async function init() {
     await loadPanels();
-    console.log(panels[panels.puzzleOps]);
-    showPuzzleOperations();
     pinkButtonImages[0] = await loadImage('button-pink.svg');
     pinkButtonImages[1] = await loadImage('button-dark-pink.svg');
     purpleButtonImages[0] = await loadImage('button-purple.svg');
     purpleButtonImages[1] = await loadImage('button-dark-purple.svg');
     plusImages[0] = await loadImage('plus.svg');
     plusImages[1] = await loadImage('dark-plus.svg');
-    initPuzzleCanvas();
-    renderPuzzle();
+    showPuzzle();
 }
 document.addEventListener('DOMContentLoaded', init);
 //# sourceMappingURL=main.js.map

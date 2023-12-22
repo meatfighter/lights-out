@@ -20,19 +20,20 @@ interface KeyValueObject {
 }
 
 const panels: KeyValueObject = {
+    puzzle: 'puzzle-panel',
     puzzleOps: 'puzzle-ops-panel',
-    puzzleEdit: 'puzzle-edit-panel'
+    puzzleEdit: 'puzzle-edit-panel',
+    config: 'config-panel'
 };
+
+const purpleButtonImages: HTMLImageElement[] = new Array(2);
+const pinkButtonImages: HTMLImageElement[] = new Array(2);
+const plusImages: HTMLImageElement[] = new Array(2);
 
 let kernel = new Kernel();
 let puzzle = new Puzzle(kernel, INITIAL_PUZZLE_SIZE, INITIAL_PUZZLE_SIZE).mix();
 
-let purpleButtonImages: HTMLImageElement[] = new Array(2);
-let pinkButtonImages: HTMLImageElement[] = new Array(2);
-let plusImages: HTMLImageElement[] = new Array(2);
-
-let hoverRow = -1;
-let hoverCol = -1;
+let hover: ButtonCoordinates | null = null;
 
 let solution: boolean[][] | null = null;
 
@@ -72,7 +73,8 @@ function stopShakingSolveButton() {
 
 function showEdit() {
     state = State.EDITING;
-
+    hover = null;
+    solution = null;
     const puzzleOpsDiv = document.getElementById('puzzle-ops') as HTMLDivElement;
     puzzleOpsDiv.innerHTML = panels.puzzleEdit;
     (document.getElementById('fillButton') as HTMLButtonElement).addEventListener('click', _ => fillPressed());
@@ -81,23 +83,74 @@ function showEdit() {
 }
 
 function fillPressed() {
-    // TODO puzzle.fill(); in Matrix
+    puzzle.fill(true);
+    renderPuzzle();
 }
 
 function clearPressed() {
-    // TODO puzzle.clear(); in Matrix
+    puzzle.fill(false);
+    renderPuzzle();
 }
 
 function editDonePressed() {
     showPuzzleOperations();
 }
 
+function showConfig() {
+    state = State.CONFIGURING;
+    hover = null;
+    solution = null;
+    (document.getElementById('main-container') as HTMLDivElement).innerHTML = panels.config;
+    (document.getElementById('resetButton') as HTMLButtonElement).addEventListener('click', _ => resetPressed());
+    (document.getElementById('doneButton') as HTMLButtonElement).addEventListener('click', _ => configDonePressed());
+    const canvas = document.getElementById('kernel-canvas') as HTMLCanvasElement;
+    canvas.height = BUTTON_SIZE * kernel.rows;
+    canvas.width = BUTTON_SIZE * kernel.cols;
+    canvas.addEventListener('click', e => kernelCanvasClicked(toButtonCoordinates(canvas, e)));
+    canvas.addEventListener('blur', _ => kernelCanvasExited());
+    canvas.addEventListener('mouseenter', e => kernelCanvasHovered(toButtonCoordinates(canvas, e)));
+    canvas.addEventListener('mousemove', e => kernelCanvasHovered(toButtonCoordinates(canvas, e)));
+    canvas.addEventListener('mouseleave', _ => kernelCanvasExited());
+    renderKernel();
+}
+
+function resetPressed() {
+    kernel = new Kernel();
+    renderKernel();
+}
+
+function configDonePressed() {
+    puzzle = new Puzzle(kernel, INITIAL_PUZZLE_SIZE, INITIAL_PUZZLE_SIZE).mix();
+    showPuzzle();
+}
+
+function kernelCanvasClicked(b: ButtonCoordinates) {
+    kernel.entries[b.row][b.col] = !kernel.entries[b.row][b.col];
+    renderKernel();
+}
+
+function kernelCanvasHovered(b: ButtonCoordinates) {
+    hover = b;
+    renderKernel();
+}
+
+function kernelCanvasExited() {
+    hover = null;
+    renderKernel();
+}
+
+function showPuzzle() {
+    solution = null;
+    (document.getElementById('main-container') as HTMLDivElement).innerHTML = panels.puzzle;
+    showPuzzleOperations();
+    initPuzzleCanvas();
+    renderPuzzle();
+}
+
 function showPuzzleOperations() {
     state = State.PLAYING;
-
-    const puzzleOpsDiv = document.getElementById('puzzle-ops') as HTMLDivElement;
-    puzzleOpsDiv.innerHTML = panels.puzzleOps;
-
+    hover = null;
+    (document.getElementById('puzzle-ops') as HTMLDivElement).innerHTML = panels.puzzleOps;
     (document.getElementById('mixButton') as HTMLButtonElement).addEventListener('click', _ => mixPressed());
     (document.getElementById('solveButton') as HTMLButtonElement).addEventListener('click', _ => solvePressed());
     (document.getElementById('editButton') as HTMLButtonElement).addEventListener('click', _ => editPressed());
@@ -116,8 +169,9 @@ function solvePressed() {
     if (solution === null) {
         shakeSolveButton();
     } else {
-        renderPuzzle();
+        provisionallyClearSolution();
     }
+    renderPuzzle();
 }
 
 function editPressed() {
@@ -130,6 +184,7 @@ function editPressed() {
 function configPressed() {
     stopShakingSolveButton();
     solution = null;
+    showConfig();
 }
 
 function toButtonCoordinates(canvas: HTMLCanvasElement, e: MouseEvent): ButtonCoordinates {
@@ -151,6 +206,22 @@ function initPuzzleCanvas() {
     canvas.addEventListener('mouseleave', _ => puzzleCanvasExited());
 }
 
+function provisionallyClearSolution() {
+    if (solution === null) {
+        return;
+    }
+    outer: {
+        for (let i = puzzle.rows - 1; i >= 0; --i) {
+            for (let j = puzzle.cols - 1; j >= 0; --j) {
+                if (solution[i][j]) {
+                    break outer;
+                }
+            }
+        }
+        solution = null;
+    }
+}
+
 function puzzleCanvasClicked(b: ButtonCoordinates) {
     if (state == State.PLAYING) {
         puzzle.pushButton(b.row, b.col);
@@ -159,50 +230,43 @@ function puzzleCanvasClicked(b: ButtonCoordinates) {
     }
     if (solution !== null) {
         solution[b.row][b.col] = !solution[b.row][b.col];
-        outer: {
-            for (let i = puzzle.rows - 1; i >= 0; --i) {
-                for (let j = puzzle.cols - 1; j >= 0; --j) {
-                    if (solution[i][j]) {
-                        break outer;
-                    }
-                }
-            }
-            solution = null;
-        }
+        provisionallyClearSolution();
     }
     renderPuzzle();
 }
 
 function puzzleCanvasHovered(b: ButtonCoordinates) {
-    hoverRow = b.row;
-    hoverCol = b.col;
+    hover = b;
     renderPuzzle();
 }
 
 function puzzleCanvasExited() {
-    hoverRow = -1;
-    hoverCol = -1;
+    hover = null;
     renderPuzzle();
 }
 
 function renderPuzzle() {
-    const canvas = document.getElementById('puzzle-canvas') as HTMLCanvasElement;
-    const ctx = canvas.getContext('2d');
-    if (ctx === null) {
-        return; // TODO HANDLE ERROR
-    }
+    render('puzzle-canvas', puzzle);
+}
+
+function renderKernel() {
+    render('kernel-canvas', kernel);
+}
+
+function render(canvasId: string, matrix: Puzzle | Kernel) {
+    const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
     ctx.fillStyle = window.getComputedStyle(document.body).backgroundColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    for (let i = puzzle.rows - 1; i >= 0; --i) {
-        for (let j = puzzle.cols - 1; j >= 0; --j) {
-            const hover = (i == hoverRow && j == hoverCol) ? 1 : 0;
-            ctx.drawImage(puzzle.entries[i][j] ? pinkButtonImages[hover] : purpleButtonImages[hover],
+    for (let i = matrix.rows - 1; i >= 0; --i) {
+        for (let j = matrix.cols - 1; j >= 0; --j) {
+            const h = (hover && i == hover.row && j == hover.col) ? 1 : 0;
+            ctx.drawImage(matrix.entries[i][j] ? pinkButtonImages[h] : purpleButtonImages[h],
                 1 + BUTTON_SIZE * j, 1 + BUTTON_SIZE * i);
             if (solution === null || !solution[i][j]) {
                 continue;
             }
-            ctx.drawImage(plusImages[hover], 13 + BUTTON_SIZE * j, 13 + BUTTON_SIZE * i);
+            ctx.drawImage(plusImages[h], 13 + BUTTON_SIZE * j, 13 + BUTTON_SIZE * i);
         }
     }
 }
@@ -234,10 +298,6 @@ async function init() {
 
     await loadPanels();
 
-    console.log(panels[panels.puzzleOps]);
-
-    showPuzzleOperations();
-
     pinkButtonImages[0] = await loadImage('button-pink.svg');
     pinkButtonImages[1] = await loadImage('button-dark-pink.svg');
     purpleButtonImages[0] = await loadImage('button-purple.svg');
@@ -245,8 +305,8 @@ async function init() {
     plusImages[0] = await loadImage('plus.svg');
     plusImages[1] = await loadImage('dark-plus.svg');
 
-    initPuzzleCanvas();
-    renderPuzzle();
+    showPuzzle();
+
 }
 
 document.addEventListener('DOMContentLoaded', init);

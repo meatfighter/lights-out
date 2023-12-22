@@ -28,7 +28,7 @@ class Matrix {
             this.cols = rows;
         }
         else {
-            this.entries = entries;
+            this.entries = entries.map(row => row.slice());
             this.rows = rows !== undefined ? rows : entries.length;
             this.cols = cols !== undefined ? cols : entries[0].length;
         }
@@ -48,6 +48,11 @@ class Matrix {
             }
         }
         return array;
+    }
+    fill(value) {
+        for (let i = this.rows - 1; i >= 0; --i) {
+            this.entries[i].fill(value);
+        }
     }
     swapRows(i0, i1) {
         const tempRow = this.entries[i0];
@@ -201,10 +206,7 @@ export class Puzzle extends Matrix {
         const matrix = this.createAugmentedMatrix().reduce();
         const solution = Array.from({ length: this.rows }, () => new Array(this.cols).fill(false));
         for (let i = 0, row = 0, col = 0; i < matrix.rows; ++i) {
-            if (!matrix.entries[i][i]) {
-                break;
-            }
-            solution[row][col] = matrix.entries[i][matrix.rows];
+            solution[row][col] = matrix.entries[i][i] && matrix.entries[i][matrix.rows];
             if (++col == this.cols) {
                 col = 0;
                 ++row;
