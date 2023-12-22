@@ -1,7 +1,9 @@
 import { Kernel, Puzzle } from './puzzle.js';
 
 const BUTTON_SIZE = 50;
+const MIN_PUZZLE_SIZE = 3;
 const INITIAL_PUZZLE_SIZE = 5;
+const MAX_PUZZLE_SIZE = 10;
 const SHAKE_MILLIS = 500;
 
 enum State {
@@ -101,8 +103,15 @@ function showConfig() {
     hover = null;
     solution = null;
     (document.getElementById('main-container') as HTMLDivElement).innerHTML = panels.config;
+    (document.getElementById('minusButton') as HTMLButtonElement).addEventListener('click', _ => minusPressed());
+    (document.getElementById('plusButton') as HTMLButtonElement).addEventListener('click', _ => plusPressed());
     (document.getElementById('resetButton') as HTMLButtonElement).addEventListener('click', _ => resetPressed());
     (document.getElementById('doneButton') as HTMLButtonElement).addEventListener('click', _ => configDonePressed());
+    (document.getElementById('wrapCheckbox') as HTMLInputElement).checked = kernel.wrap;
+    const sizeField = document.getElementById('sizeField') as HTMLInputElement;
+    sizeField.value = puzzle.rows.toString();
+    sizeField.addEventListener('blur', _ => sizeEdited());
+    sizeEdited();
     const canvas = document.getElementById('kernel-canvas') as HTMLCanvasElement;
     canvas.height = BUTTON_SIZE * kernel.rows;
     canvas.width = BUTTON_SIZE * kernel.cols;
@@ -114,13 +123,54 @@ function showConfig() {
     renderKernel();
 }
 
+function parseSizeField(sizeField: HTMLInputElement) {
+    let value = parseInt(sizeField.value);
+    if (isNaN(value)) {
+        value = INITIAL_PUZZLE_SIZE;
+    } else {
+        value = Math.min(MAX_PUZZLE_SIZE, Math.max(MIN_PUZZLE_SIZE, value));
+    }
+    return value;
+}
+
+function enableSizeButtons(value: number) {
+    (document.getElementById('minusButton') as HTMLButtonElement).disabled = value <= MIN_PUZZLE_SIZE;
+    (document.getElementById('plusButton') as HTMLButtonElement).disabled = value >= MAX_PUZZLE_SIZE;
+}
+
+function sizeEdited() {
+    const sizeField = document.getElementById('sizeField') as HTMLInputElement;
+    const value = parseSizeField(sizeField);
+    enableSizeButtons(value);
+    sizeField.value = value.toString();
+}
+
+function minusPressed() {
+    const sizeField = document.getElementById('sizeField') as HTMLInputElement;
+    const value = Math.max(MIN_PUZZLE_SIZE, parseSizeField(sizeField) - 1);
+    enableSizeButtons(value);
+    sizeField.value = value.toString();
+}
+
+function plusPressed() {
+    const sizeField = document.getElementById('sizeField') as HTMLInputElement;
+    const value = Math.min(MAX_PUZZLE_SIZE, parseSizeField(sizeField) + 1);
+    enableSizeButtons(value);
+    sizeField.value = value.toString();
+}
+
 function resetPressed() {
+    (document.getElementById('sizeField') as HTMLInputElement).value = INITIAL_PUZZLE_SIZE.toString();
+    enableSizeButtons(INITIAL_PUZZLE_SIZE);
     kernel = new Kernel();
+    (document.getElementById('wrapCheckbox') as HTMLInputElement).checked = kernel.wrap;
     renderKernel();
 }
 
 function configDonePressed() {
-    puzzle = new Puzzle(kernel, INITIAL_PUZZLE_SIZE, INITIAL_PUZZLE_SIZE).mix();
+    const size = parseSizeField(document.getElementById('sizeField') as HTMLInputElement);
+    kernel = new Kernel((document.getElementById('wrapCheckbox') as HTMLInputElement).checked, kernel);
+    puzzle = new Puzzle(kernel, size, size).mix();
     showPuzzle();
 }
 

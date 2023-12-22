@@ -7,7 +7,7 @@
 
 body {
     background-color: #C9D6DE;
-    color: #FFFFFF;
+    color: #000000;
     margin: 0;
     padding: 0;
     font-family: 'Open Sans', sans-serif;
@@ -100,4 +100,80 @@ body {
 button:disabled.button:active {
     transform: none;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.label-column {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    font-weight: bold;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.custom-checkbox {
+    display: block;
+    position: relative;
+    padding-left: 35px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.custom-checkbox input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.custom-checkbox .checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 25px;
+    width: 25px;
+    background-color: #eee;
+    border-radius: 4px;
+    border: 1px solid black;
+}
+
+.custom-checkbox:hover input ~ .checkmark {
+    background-color: #ddd;
+}
+
+.custom-checkbox input:checked ~ .checkmark {
+    background-color: #517FFF;
+}
+
+.custom-checkbox .checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.custom-checkbox input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.custom-checkbox .checkmark:after {
+    left: 9px;
+    top: 5px;
+    width: 7px;
+    height: 15px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg) translate(-5px, -2.5px);
+}
+
+input[type="text"] {
+    width: fit-content;
+    height: 25px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+input[type="text"] {
+    width: 4ch;
 }
