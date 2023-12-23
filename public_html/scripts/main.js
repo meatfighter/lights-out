@@ -4,6 +4,7 @@ const MIN_PUZZLE_SIZE = 3;
 const INITIAL_PUZZLE_SIZE = 5;
 const MAX_PUZZLE_SIZE = 10;
 const SHAKE_MILLIS = 500;
+const MAX_FETCH_RETRIES = 5;
 var State;
 (function (State) {
     State[State["PLAYING"] = 0] = "PLAYING";
@@ -25,6 +26,93 @@ let hover = null;
 let solution = null;
 let shaking = false;
 let state = State.PLAYING;
+async function downloadFile(url, progressListener, options = {}) {
+    for (let i = MAX_FETCH_RETRIES - 1; i >= 0; --i) {
+        try {
+            const response = await fetch(url, options);
+            if (!response.ok) {
+                continue;
+            }
+            const contentLengthStr = response.headers.get('Content-Length');
+            if (!contentLengthStr) {
+                continue;
+            }
+            const contentLength = parseInt(contentLengthStr);
+            if (isNaN(contentLength) || contentLength <= 0) {
+                continue;
+            }
+            const body = response.body;
+            if (body === null) {
+                continue;
+            }
+            const reader = body.getReader();
+            const chunks = [];
+            let bytesReceived = 0;
+            while (true) {
+                const { done, value: chunk } = await reader.read();
+                if (done) {
+                    break;
+                }
+                chunks.push(chunk);
+                bytesReceived += chunk.length;
+                if (progressListener) {
+                    progressListener(bytesReceived, contentLength);
+                }
+            }
+            const uint8Array = new Uint8Array(bytesReceived);
+            let position = 0;
+            chunks.forEach(chunk => {
+                uint8Array.set(chunk, position);
+                position += chunk.length;
+            });
+            return uint8Array;
+        }
+        catch (error) {
+            if (i === 0) {
+                throw error;
+            }
+        }
+    }
+    throw new Error("Failed to fetch.");
+}
+async function convertSvgToImage(svgContent) {
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.src = `data:image/svg+xml; charset=utf8, ${encodeURIComponent(svgContent)}`;
+    });
+}
+async function processZip(arrayBuffer) {
+    const progressBar = document.getElementById('loading-progress');
+    const cardMap = new Map();
+    const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'jack', 'queen', 'king', 'ace'];
+    const suits = ['clubs', 'diamonds', 'hearts', 'spades'];
+    ranks.forEach((rank, rankIndex) => suits.forEach((suit, suitIndex) => cardMap.set(`cards/${rank}_of_${suit}.svg`, 4 * rankIndex + suitIndex)));
+    cardMap.set('cards/back.svg', BACK);
+    const zip = new JSZip();
+    const entries = Object.entries((await zip.loadAsync(arrayBuffer)).files);
+    for (let i = 0; i < entries.length; ++i) {
+        const [filename, fileData] = entries[i];
+        if (fileData.dir) {
+            continue;
+        }
+        const data = await fileData.async("string");
+        if (cardMap.has(filename)) {
+            cardImages[cardMap.get(filename)] = await convertSvgToImage(data);
+            continue;
+        }
+        Object.entries(Panels).forEach(([key, value]) => {
+            if (filename === `html/${value}.html`) {
+                Panels[key] = data;
+            }
+        });
+        progressBar.value = 50 + 50 * i / (entries.length - 1);
+    }
+}
+function isTouchscreenDevice() {
+    return 'ontouchstart' in window || navigator.maxTouchPoints;
+}
 function shakeSolveButton() {
     if (shaking) {
         return;
@@ -78,7 +166,6 @@ function showConfig() {
     state = State.CONFIGURING;
     hover = null;
     solution = null;
-    document.body.style.overflow = 'auto';
     document.getElementById('main-container').innerHTML = panels.config;
     document.getElementById('minusButton').addEventListener('click', _ => minusPressed());
     document.getElementById('plusButton').addEventListener('click', _ => plusPressed());
@@ -158,7 +245,6 @@ function kernelCanvasExited() {
 }
 function showPuzzle() {
     solution = null;
-    document.body.style.overflow = 'hidden';
     document.getElementById('main-container').innerHTML = panels.puzzle;
     showPuzzleOperations();
     initPuzzleCanvas();
@@ -260,13 +346,14 @@ function renderKernel() {
     render('kernel-canvas', kernel);
 }
 function render(canvasId, matrix) {
+    const mouse = !isTouchscreenDevice();
     const canvas = document.getElementById(canvasId);
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = window.getComputedStyle(document.body).backgroundColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     for (let i = matrix.rows - 1; i >= 0; --i) {
         for (let j = matrix.cols - 1; j >= 0; --j) {
-            const h = (hover && i == hover.row && j == hover.col) ? 1 : 0;
+            const h = (mouse && hover && i == hover.row && j == hover.col) ? 1 : 0;
             ctx.drawImage(matrix.entries[i][j] ? pinkButtonImages[h] : purpleButtonImages[h], 1 + BUTTON_SIZE * j, 1 + BUTTON_SIZE * i);
             if (solution === null || !solution[i][j]) {
                 continue;

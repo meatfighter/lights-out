@@ -8,7 +8,8 @@
     "forceConsistentCasingInFileNames": true,
     "sourceMap": true,
     "rootDir": "./src",
-    "outDir": "./public_html/scripts"
+    "outDir": "./public_html/scripts",
+    "allowJs": true
   },
   "include": [
     "src/**/*"

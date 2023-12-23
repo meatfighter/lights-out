@@ -55,10 +55,6 @@ img.centered {
     transition: background-color 0.1s ease-in-out;
 }
 
-.button:hover {
-    background-color: #4775E0;
-}
-
 .button:active {
     transform: translateY(2px);
     box-shadow: none;
@@ -104,10 +100,15 @@ a,a:visited {
     font-weight: bold;
 }
 
-a:hover {
-    color: #517FFF;
-    text-decoration: none;
-    white-space: nowrap;
+@media (pointer: fine) {
+    .button:hover {
+        background-color: #4775E0;
+    }
+    a:hover {
+        color: #517FFF;
+        text-decoration: none;
+        white-space: nowrap;
+    }
 }
 
 hr {
