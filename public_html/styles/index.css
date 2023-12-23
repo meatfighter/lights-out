@@ -28,8 +28,8 @@ p.title {
     font-weight: 500;
     text-align: center;
     padding-top: 20px;
-    margin-bottom: 20px;
-    line-height: 50px;
+    margin-bottom: 0;
+    line-height: 80px;
 }
 
 img.centered {
@@ -98,13 +98,14 @@ p.home {
 }
 
 a,a:visited {
-    color: #FFD700;
+    color: #395DB2;
     text-decoration: none;
     white-space: nowrap;
+    font-weight: bold;
 }
 
 a:hover {
-    color: #E5BB00;
+    color: #517FFF;
     text-decoration: none;
     white-space: nowrap;
 }

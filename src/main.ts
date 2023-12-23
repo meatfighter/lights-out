@@ -102,6 +102,7 @@ function showConfig() {
     state = State.CONFIGURING;
     hover = null;
     solution = null;
+    document.body.style.overflow = 'auto';
     (document.getElementById('main-container') as HTMLDivElement).innerHTML = panels.config;
     (document.getElementById('minusButton') as HTMLButtonElement).addEventListener('click', _ => minusPressed());
     (document.getElementById('plusButton') as HTMLButtonElement).addEventListener('click', _ => plusPressed());
@@ -191,6 +192,7 @@ function kernelCanvasExited() {
 
 function showPuzzle() {
     solution = null;
+    document.body.style.overflow = 'hidden';
     (document.getElementById('main-container') as HTMLDivElement).innerHTML = panels.puzzle;
     showPuzzleOperations();
     initPuzzleCanvas();
