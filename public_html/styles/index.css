@@ -16,6 +16,12 @@ body {
     margin-right: auto;
 }
 
+p {
+    font-size: 16px;
+    line-height: 27px;
+    font-weight: 300;
+}
+
 p.title {
     font-family: 'Reem Kufi Fun', serif;
     font-size: 72px;
@@ -105,4 +111,28 @@ a:hover {
 
 hr {
     margin-top: 60px;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+dl {
+    display: grid;
+    grid-template-columns: max-content auto;
+    margin-left: 20px;
+}
+
+dt {
+    grid-column-start: 1;
+}
+
+dd {
+    grid-column-start: 2;
+    margin-left: 15px;
+    margin-bottom: 5px;
+}
+
+.bull {
+    margin-right: 6px;
 }
