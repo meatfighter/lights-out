@@ -1,1 +1,1 @@
-# lights-out
+Project page: https://meatfighter.com/lights-out
