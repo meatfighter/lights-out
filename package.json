@@ -3,10 +3,14 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "npx webpack --mode production"
+    "clean": "rimraf public_html/scripts/*",
+    "pack": "npx webpack --mode production",
+    "zip": "zip -r public_html/lights-out.zip html/ images/",
+    "build": "npm run clean && npm run pack && npm run zip"
   },
   "devDependencies": {
     "@types/jszip": "^3.4.1",
+    "rimraf": "^5.0.5",
     "ts-loader": "^9.5.1",
     "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4"

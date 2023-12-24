@@ -80,7 +80,6 @@ async function downloadFile(url: string) {
                 uint8Array.set(chunk, position);
                 position += chunk.length;
             });
-
             return uint8Array;
         } catch (error) {
             if (i === 0) {
@@ -92,11 +91,15 @@ async function downloadFile(url: string) {
 }
 
 async function convertSvgToImage(svgContent: string): Promise<HTMLImageElement> {
+    const index = svgContent.indexOf('<svg');
+    if (index < 0) {
+        throw new Error("SVG content missing svg element.");
+    }
     return new Promise((resolve, reject) => {
         const image = new Image();
         image.onload = () => resolve(image);
         image.onerror = reject;
-        image.src = `data:image/svg+xml; charset=utf8, ${encodeURIComponent(svgContent)}`;
+        image.src = `data:image/svg+xml; charset=utf8, ${encodeURIComponent(svgContent.substring(index))}`;
     });
 }
 
@@ -111,7 +114,7 @@ async function processZip(arrayBuffer: Uint8Array) {
         if (fileData.dir) {
             continue;
         }
-        const data = await fileData.async("string");
+        const data = await fileData.async('string');
         if (filename.endsWith('.svg')) {
             (filename.includes('pink') ? pinkButtonImages : filename.includes('purple')
                 ? purpleButtonImages : plusImages)[filename.includes('dark') ? 1 : 0] = await convertSvgToImage(data);
