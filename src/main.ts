@@ -7,12 +7,7 @@ const INITIAL_PUZZLE_SIZE = 5;
 const MAX_PUZZLE_SIZE = 10;
 const SHAKE_MILLIS = 500;
 const MAX_FETCH_RETRIES = 5;
-
-enum State {
-    PLAYING,
-    EDITING,
-    CONFIGURING
-}
+const ZIP_DOWNLOAD_PERCENT = 90;
 
 interface ButtonCoordinates {
     row: number;
@@ -23,9 +18,8 @@ interface KeyValueObject {
     [ key: string ]: string;
 }
 
-type ProgressListener = (bytesReceived: number, contentLength: number) => void;
-
 const panels: KeyValueObject = {
+    main: 'main-panel',
     puzzle: 'puzzle-panel',
     puzzleOps: 'puzzle-ops-panel',
     puzzleEdit: 'puzzle-edit-panel',
@@ -44,13 +38,13 @@ let hover: ButtonCoordinates | null = null;
 let solution: boolean[][] | null = null;
 
 let shaking = false;
+let editing = false;
 
-let state = State.PLAYING;
-
-async function downloadFile(url: string, progressListener?: ProgressListener, options = {}) {
+async function downloadFile(url: string) {
+    const progressBar = document.getElementById('loading-progress') as HTMLProgressElement;
     for (let i = MAX_FETCH_RETRIES - 1; i >= 0; --i) {
         try {
-            const response = await fetch(url, options);
+            const response = await fetch(url);
             if (!response.ok) {
                 continue;
             }
@@ -77,9 +71,7 @@ async function downloadFile(url: string, progressListener?: ProgressListener, op
                 }
                 chunks.push(chunk);
                 bytesReceived += chunk.length;
-                if (progressListener) {
-                    progressListener(bytesReceived, contentLength);
-                }
+                progressBar.value = ZIP_DOWNLOAD_PERCENT * bytesReceived / contentLength;
             }
 
             const uint8Array = new Uint8Array(bytesReceived);
@@ -110,8 +102,7 @@ async function convertSvgToImage(svgContent: string): Promise<HTMLImageElement> 
 
 async function processZip(arrayBuffer: Uint8Array) {
 
-    const progressBar = document.getElementById('loading-progress');
-
+    const progressBar = document.getElementById('loading-progress') as HTMLProgressElement;
     const zip = new JSZip();
     const entries = Object.entries((await zip.loadAsync(arrayBuffer)).files);
 
@@ -132,7 +123,7 @@ async function processZip(arrayBuffer: Uint8Array) {
                 panels[key] = data;
             }
         });
-        progressBar.value = 50 + 50 * i / (entries.length - 1);
+        progressBar.value = ZIP_DOWNLOAD_PERCENT + (100 - ZIP_DOWNLOAD_PERCENT) * i / (entries.length - 1);
     }
 }
 
@@ -171,7 +162,7 @@ function stopShakingSolveButton() {
 }
 
 function showEdit() {
-    state = State.EDITING;
+    editing = true;
     hover = null;
     solution = null;
     const puzzleOpsDiv = document.getElementById('puzzle-ops') as HTMLDivElement;
@@ -196,7 +187,7 @@ function editDonePressed() {
 }
 
 function showConfig() {
-    state = State.CONFIGURING;
+    editing = false;
     hover = null;
     solution = null;
     (document.getElementById('main-container') as HTMLDivElement).innerHTML = panels.config;
@@ -295,7 +286,7 @@ function showPuzzle() {
 }
 
 function showPuzzleOperations() {
-    state = State.PLAYING;
+    editing = false;
     hover = null;
     (document.getElementById('puzzle-ops') as HTMLDivElement).innerHTML = panels.puzzleOps;
     (document.getElementById('mixButton') as HTMLButtonElement).addEventListener('click', _ => mixPressed());
@@ -370,10 +361,10 @@ function provisionallyClearSolution() {
 }
 
 function puzzleCanvasClicked(b: ButtonCoordinates) {
-    if (state == State.PLAYING) {
-        puzzle.pushButton(b.row, b.col);
-    } else {
+    if (editing) {
         puzzle.entries[b.row][b.col] = !puzzle.entries[b.row][b.col];
+    } else {
+        puzzle.pushButton(b.row, b.col);
     }
     if (solution !== null) {
         solution[b.row][b.col] = !solution[b.row][b.col];
@@ -419,42 +410,17 @@ function render(canvasId: string, matrix: Puzzle | Kernel) {
     }
 }
 
-async function loadPanels() {
-    await Promise.all(Object.keys(panels).map(async key => {
-        const response = await fetch(`${panels[key]}.html`);
-        if (response.ok) {
-            panels[key] = await response.text();
-        }
-    }));
-}
-
-async function loadImage(imageUrl: string): Promise<HTMLImageElement> {
-    return new Promise((resolve, reject) => {
-        const image = new Image();
-        image.onload = () => resolve(image);
-        image.onerror = _ => reject(new Error('Failed to load image.'));
-        image.src = imageUrl;
-        // fetch(imageUrl)
-        //     .then(response => response.blob())
-        //     .then(blob => image.src = URL.createObjectURL(blob))
-        //     .catch(e => reject(e));
-    });
-}
-
-// TODO TESTING
-async function init() {
-
-    await loadPanels();
-
-    pinkButtonImages[0] = await loadImage('button-pink.svg');
-    pinkButtonImages[1] = await loadImage('button-dark-pink.svg');
-    purpleButtonImages[0] = await loadImage('button-purple.svg');
-    purpleButtonImages[1] = await loadImage('button-dark-purple.svg');
-    plusImages[0] = await loadImage('plus.svg');
-    plusImages[1] = await loadImage('dark-plus.svg');
-
+function start() {
+    (document.getElementById('main-content') as HTMLElement).innerHTML = panels.main;
     showPuzzle();
+}
 
+function showFatalError() {
+    (document.getElementById('main-content') as HTMLElement).innerHTML = '<span id="fatal-error">&#x1F480;</span>';
+}
+
+function init() {
+    downloadFile('lights-out.zip').then(processZip).then(start).catch(showFatalError);
 }
 
 document.addEventListener('DOMContentLoaded', init);
