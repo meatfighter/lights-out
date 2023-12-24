@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "tsc"
+    "build": "npx webpack --mode production"
   },
   "devDependencies": {
     "@types/jszip": "^3.4.1",
