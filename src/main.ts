@@ -1,4 +1,5 @@
-import { Kernel, Puzzle } from './puzzle.js';
+import JSZip from 'jszip';
+import { Kernel, Puzzle } from './puzzle';
 
 const BUTTON_SIZE = 50;
 const MIN_PUZZLE_SIZE = 3;
@@ -98,7 +99,7 @@ async function downloadFile(url: string, progressListener?: ProgressListener, op
     throw new Error("Failed to fetch.");
 }
 
-async function convertSvgToImage(svgContent: string) {
+async function convertSvgToImage(svgContent: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
         const image = new Image();
         image.onload = () => resolve(image);
@@ -111,13 +112,6 @@ async function processZip(arrayBuffer: Uint8Array) {
 
     const progressBar = document.getElementById('loading-progress');
 
-    const cardMap = new Map();
-    const ranks = [ '2', '3', '4', '5', '6', '7', '8', '9', '10', 'jack', 'queen', 'king', 'ace' ];
-    const suits = [ 'clubs', 'diamonds', 'hearts', 'spades' ];
-    ranks.forEach((rank, rankIndex) =>
-        suits.forEach((suit, suitIndex) => cardMap.set(`cards/${rank}_of_${suit}.svg`, 4 * rankIndex + suitIndex)));
-    cardMap.set('cards/back.svg', BACK);
-
     const zip = new JSZip();
     const entries = Object.entries((await zip.loadAsync(arrayBuffer)).files);
 
@@ -127,13 +121,15 @@ async function processZip(arrayBuffer: Uint8Array) {
             continue;
         }
         const data = await fileData.async("string");
-        if (cardMap.has(filename)) {
-            cardImages[cardMap.get(filename)] = await convertSvgToImage(data);
+        if (filename.endsWith('.svg')) {
+            (filename.includes('pink') ? pinkButtonImages : filename.includes('purple')
+                ? purpleButtonImages : plusImages)[filename.includes('dark') ? 1 : 0] = await convertSvgToImage(data);
             continue;
         }
-        Object.entries(Panels).forEach(([key, value]) => {
+
+        Object.entries(panels).forEach(([key, value]) => {
             if (filename === `html/${value}.html`) {
-                Panels[key] = data;
+                panels[key] = data;
             }
         });
         progressBar.value = 50 + 50 * i / (entries.length - 1);
