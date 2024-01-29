@@ -423,6 +423,7 @@ function showFatalError() {
 }
 
 function init() {
+    document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
     downloadFile('lights-out.zip').then(processZip).then(start).catch(showFatalError);
 }
 
