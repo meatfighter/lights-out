@@ -16,6 +16,12 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+@media (pointer: coarse) {
+    html, body {
+        touch-action: manipulation;
+    }
+}
+
 .row-container {
     display: flex;
     flex-direction: row;

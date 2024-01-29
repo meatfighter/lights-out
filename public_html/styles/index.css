@@ -16,12 +16,6 @@ body {
     margin-right: auto;
 }
 
-@media (pointer: coarse) {
-    html, body {
-        touch-action: manipulation;
-    }
-}
-
 p {
     font-size: 16px;
     line-height: 27px;
