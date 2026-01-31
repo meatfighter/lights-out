@@ -1,21 +1,20 @@
 {
-  "name": "lights-out",
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "clean": "rimraf public_html/scripts/*",
-    "pack": "npx webpack --mode production",
-    "zip": "zip -r public_html/lights-out.zip html/ images/",
-    "build": "npm run clean && npm run pack && npm run zip"
-  },
-  "devDependencies": {
-    "@types/jszip": "^3.4.1",
-    "rimraf": "^6.0.1",
-    "ts-loader": "^9.5.2",
-    "webpack": "^5.97.1",
-    "webpack-cli": "^6.0.1"
-  },
-  "dependencies": {
-    "jszip": "^3.10.1"
-  }
+    "name": "lights-out",
+    "version": "1.1.0",
+    "type": "module",
+    "scripts": {
+        "clean": "rimraf public_html/scripts/*",
+        "pack": "npx webpack --mode production",
+        "zip": "zip -r public_html/lights-out.zip html/ images/",
+        "build": "npm run clean && npm run pack && npm run zip"
+    },
+    "devDependencies": {
+        "rimraf": "^6.0.1",
+        "ts-loader": "^9.5.2",
+        "webpack": "^5.97.1",
+        "webpack-cli": "^6.0.1"
+    },
+    "dependencies": {
+        "jszip": "^3.10.1"
+    }
 }

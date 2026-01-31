@@ -1,2 +1,65 @@
+# =========================
+# Node.js dependencies
+# =========================
 node_modules/
+
+# =========================
+# Logs
+# =========================
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+
+# =========================
+# Environment / secrets
+# =========================
+.env
+.env.*.local
+
+# =========================
+# Build outputs / artifacts
+# (adjust if you actually want to commit these)
+# =========================
+dist/
+build/
+out/
+coverage/
+*.tsbuildinfo
+
+# Your project’s generated assets
+public_html/scripts/
+public_html/lights-out.zip
+
+# Optional: if webpack emits sourcemaps or cache
+*.map
+.cache/
+.parcel-cache/
+
+# =========================
+# OS / Editor junk
+# =========================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+.vscode/
 .idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# =========================
+# Temporary files
+# =========================
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+*.swo
