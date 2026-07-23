@@ -3,12 +3,27 @@
 
 <head>
 
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="date" content="2026-01-31">
+    <meta charset="utf-8">
+    <meta name="date" content="2026-07-23">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#B39472">
+    <meta name="description" content="Play Lights Out, a grid-based puzzle game where pressing a button toggles nearby lights. Turn every light off to solve the board.">
+    <meta name="robots" content="index,follow">
 
-    <link rel="stylesheet" href="styles/index.css?v=2026-01-31" type="text/css">
+    <link rel="canonical" href="https://meatfighter.com/lights-out">
+    <meta property="og:title" content="Lights Out - Logic Puzzle Game">
+    <meta property="og:description" content="Play Lights Out, a grid-based puzzle game where pressing a button toggles nearby lights. Turn every light off to solve the board.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://meatfighter.com/lights-out">
+    <meta property="og:image" content="https://meatfighter.com/lights-out/google-touch-icon-512.png">
+    <meta property="og:image:alt" content="Lights Out puzzle game logo">
+    <meta property="og:site_name" content="meatfighter.com">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Lights Out - Logic Puzzle Game">
+    <meta name="twitter:description" content="Play Lights Out, a grid-based puzzle game where pressing a button toggles nearby lights. Turn every light off to solve the board.">
+    <meta name="twitter:image" content="https://meatfighter.com/lights-out/google-touch-icon-512.png">
+
+    <link rel="stylesheet" href="styles/index.css?v=2026-07-23" type="text/css">
     <link rel="manifest" href="manifest.json">
     <link rel="mask-icon" href="mask-icon.svg" color="#000000">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -19,17 +34,36 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans&family=Reem+Kufi+Fun:wght@500&display=swap" rel="stylesheet">
 
-    <title>Lights Out</title>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "Lights Out",
+      "description": "Play Lights Out, a grid-based puzzle game where pressing a button toggles nearby lights. Turn every light off to solve the board.",
+      "url": "https://meatfighter.com/lights-out",
+      "image": "https://meatfighter.com/lights-out/google-touch-icon-512.png",
+      "genre": "Puzzle",
+      "playMode": "SinglePlayer",
+      "author": {
+        "@type": "Organization",
+        "name": "meatfighter.com",
+        "url": "https://meatfighter.com"
+      },
+      "license": "https://creativecommons.org/licenses/by-sa/4.0/"
+    }
+    </script>
+
+    <title>Lights Out - Logic Puzzle Game</title>
 
 </head>
 
 <body>
 
-<p class="title">Lights Out</p>
+<h1 class="title">Lights Out</h1>
 
 <p><img class="centered" src="logo.svg" id="logo" alt="Lights Out"></p>
 
-<button class="button" id="playButton">Play</button>
+<button class="button" id="playButton" type="button">Play</button>
 
 <p><span class="bold">Lights Out</span> is a puzzle game played on a grid of illuminated buttons. It starts with a random mix of lit and unlit buttons. Pressing a button toggles a cluster of nearby lights. The goal is to turn them all off.</p>
 
@@ -48,10 +82,10 @@
 
 <hr>
 <table class="copyright">
-    <tr><td><p class="copyright">&copy; 2026 meatfighter.com<br>This content is licensed under <a href="http://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">CC BY-SA 4.0<img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1" alt="CC"><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1" alt="BY"><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1" alt="SA"></a></p></td><td><p class="home"><a href="https://github.com/meatfighter/lights-out" target="_blank">Source</a>&nbsp;|&nbsp;<a href="https://meatfighter.com">Home</a></p></td></tr>
+    <tr><td><p class="copyright">&copy; 2026 meatfighter.com<br>This content is licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">CC BY-SA 4.0<img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1" alt="CC"><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1" alt="BY"><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1" alt="SA"></a></p></td><td><p class="home"><a href="https://github.com/meatfighter/lights-out" target="_blank" rel="noopener noreferrer">Source</a>&nbsp;|&nbsp;<a href="https://meatfighter.com">Home</a></p></td></tr>
 </table>
 
-<script src="scripts/index.bundle.js?v=2026-01-31"></script>
+<script src="scripts/index.bundle.js?v=2026-07-23"></script>
 </body>
 
 </html>

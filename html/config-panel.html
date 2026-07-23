@@ -3,16 +3,16 @@
 
         <label for="sizeField">Puzzle size:</label>
         <div>
-            <button class="button" id="minusButton">-</button>
+            <button class="button" id="minusButton" type="button" aria-label="Decrease puzzle size">-</button>
             <input id="sizeField" name="sizeField" type="text" maxlength="2">
-            <button class="button" id="plusButton">+</button>
+            <button class="button" id="plusButton" type="button" aria-label="Increase puzzle size">+</button>
         </div>
 
         <div></div>
         <div></div>
 
-        Toggle pattern:
-        <canvas id="kernel-canvas" class="canvas" width="150" height="150"></canvas>
+        <div id="kernelLabel">Toggle pattern:</div>
+        <canvas id="kernel-canvas" class="canvas" width="150" height="150" role="img" aria-labelledby="kernelLabel">Your browser does not support the toggle pattern editor.</canvas>
 
         <div></div>
         <div></div>
@@ -30,6 +30,6 @@
 </div>
 
 <div class="button-row" id="kernel-ops">
-    <button class="button" id="resetButton">Reset</button>
-    <button class="button" id="doneButton">Done</button>
+    <button class="button" id="resetButton" type="button">Reset</button>
+    <button class="button" id="configDoneButton" type="button">Done</button>
 </div>

@@ -172,7 +172,7 @@ function showEdit() {
     puzzleOpsDiv.innerHTML = panels.puzzleEdit;
     (document.getElementById('fillButton') as HTMLButtonElement).addEventListener('click', _ => fillPressed());
     (document.getElementById('clearButton') as HTMLButtonElement).addEventListener('click', _ => clearPressed());
-    (document.getElementById('doneButton') as HTMLButtonElement).addEventListener('click', _ => editDonePressed());
+    (document.getElementById('editDoneButton') as HTMLButtonElement).addEventListener('click', _ => editDonePressed());
 }
 
 function fillPressed() {
@@ -197,7 +197,7 @@ function showConfig() {
     (document.getElementById('minusButton') as HTMLButtonElement).addEventListener('click', _ => minusPressed());
     (document.getElementById('plusButton') as HTMLButtonElement).addEventListener('click', _ => plusPressed());
     (document.getElementById('resetButton') as HTMLButtonElement).addEventListener('click', _ => resetPressed());
-    (document.getElementById('doneButton') as HTMLButtonElement).addEventListener('click', _ => configDonePressed());
+    (document.getElementById('configDoneButton') as HTMLButtonElement).addEventListener('click', _ => configDonePressed());
     (document.getElementById('wrapCheckbox') as HTMLInputElement).checked = kernel.wrap;
     const sizeField = document.getElementById('sizeField') as HTMLInputElement;
     sizeField.value = puzzle.rows.toString();
@@ -424,7 +424,7 @@ function showFatalError() {
 
 function init() {
     document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
-    downloadFile('lights-out.zip').then(processZip).then(start).catch(showFatalError);
+    downloadFile('lights-out.zip?v=2026-07-23').then(processZip).then(start).catch(showFatalError);
 }
 
 document.addEventListener('DOMContentLoaded', init);

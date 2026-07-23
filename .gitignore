@@ -29,7 +29,7 @@ out/
 coverage/
 *.tsbuildinfo
 
-# Your project’s generated assets
+# Your project's generated assets
 public_html/scripts/
 public_html/lights-out.zip
 
